@@ -1,0 +1,48 @@
+{
+  "name": "launchpad",
+  "version": "1.0.0",
+  "description": "LaunchPad — A desktop Stream Deck app for launching web URLs, Steam games, local apps, and folders. macOS-inspired design with genie animations.",
+  "main": "electron/main.cjs",
+  "author": "Scott",
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "dev:web": "vite",
+    "build": "vite build",
+    "start": "electron .",
+    "package:win": "vite build && npx electron-packager . LaunchPad --platform=win32 --arch=x64 --out=release-builds --icon=public/icon.ico --overwrite",
+    "package:mac": "vite build && npx electron-packager . LaunchPad --platform=darwin --arch=x64 --out=release-builds --icon=public/icon.png --overwrite",
+    "package:linux": "vite build && npx electron-packager . LaunchPad --platform=linux --arch=x64 --out=release-builds --icon=public/icon.png --overwrite",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.scott.launchpad",
+    "productName": "LaunchPad",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.15",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.2",
+    "concurrently": "^10.0.0",
+    "electron": "^42.3.0",
+    "electron-packager": "^17.1.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "wait-on": "^9.0.10"
+  },
+  "dependencies": {
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  }
+}
