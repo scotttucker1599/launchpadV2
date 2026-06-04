@@ -25,7 +25,7 @@ A sleek, macOS-inspired desktop Stream Deck app for launching your favorite webs
 ### Clone & Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/launchpad.git
+git clone https://github.com/scotttucker1599/launchpadV2.git
 cd launchpad
 npm install
 ```
