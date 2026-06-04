@@ -13,6 +13,7 @@
     "package:win": "vite build && npx electron-packager . LaunchPad --platform=win32 --arch=x64 --out=release-builds --icon=public/icon.ico --overwrite",
     "package:mac": "vite build && npx electron-packager . LaunchPad --platform=darwin --arch=x64 --out=release-builds --icon=public/icon.png --overwrite",
     "package:linux": "vite build && npx electron-packager . LaunchPad --platform=linux --arch=x64 --out=release-builds --icon=public/icon.png --overwrite",
+    "dist:win": "vite build && electron-builder --win --x64",
     "preview": "vite preview"
   },
   "build": {
@@ -27,7 +28,15 @@
       "package.json"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "public/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LaunchPad"
     }
   },
   "devDependencies": {
@@ -36,6 +45,7 @@
     "@vitejs/plugin-react": "^6.0.2",
     "concurrently": "^10.0.0",
     "electron": "^42.3.0",
+    "electron-builder": "^26.8.1",
     "electron-packager": "^17.1.2",
     "typescript": "~6.0.2",
     "vite": "^8.0.12",

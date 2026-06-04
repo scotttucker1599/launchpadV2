@@ -38,24 +38,29 @@ npm run dev
 
 This starts both the Vite dev server and Electron together. The app will open automatically with hot-reload enabled.
 
-### Build a Standalone Executable
+### Build a Standalone Executable / Installer
 
-#### Windows
+#### Windows (Portable Folder)
 ```bash
 npm run package:win
 ```
+This builds a portable folder in `release-builds/` where you can run `LaunchPad.exe` directly without installation.
 
-#### macOS
+#### Windows (Single-File Installer)
+```bash
+npm run dist:win
+```
+This builds a standard single-file Windows setup installer (`LaunchPad Setup 1.0.0.exe`) under the `release/` folder, which installs the app and sets up Start Menu/Desktop shortcuts.
+
+#### macOS (Portable Folder)
 ```bash
 npm run package:mac
 ```
 
-#### Linux
+#### Linux (Portable Folder)
 ```bash
 npm run package:linux
 ```
-
-The packaged app will be in the `release-builds/` folder. You can run `LaunchPad.exe` (Windows) directly — no install needed.
 
 ## 🛠️ Project Structure
 
