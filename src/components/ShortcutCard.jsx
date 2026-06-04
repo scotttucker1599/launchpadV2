@@ -76,7 +76,7 @@ function ShortcutCard({ shortcut, onLaunch, onEdit, onDelete }) {
       <div className="card-icon">
         {isCustomImage ? (
           <img
-            src={`file://${shortcut.customImage.replace(/\\/g, '/')}`}
+            src={`local-media://${shortcut.customImage.replace(/\\/g, '/')}`}
             alt={shortcut.name}
             className="card-custom-image"
             draggable="false"

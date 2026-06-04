@@ -78,13 +78,11 @@ function App() {
     showToast(`Launching "${shortcut.name}"`, '🚀');
   };
 
-  const handleMinimizeWindow = () => {
+  const handleMinimizeWindow = async () => {
     if (isWindowGenieMinimizing) return;
     setIsWindowGenieMinimizing(true);
-    setTimeout(async () => {
-      await api.minimizeWindow();
-      setIsWindowGenieMinimizing(false);
-    }, 520);
+    await api.minimizeWindow();
+    setIsWindowGenieMinimizing(false);
   };
 
   return (

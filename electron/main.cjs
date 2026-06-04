@@ -1,11 +1,26 @@
-const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog, screen, protocol, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { exec } = require('child_process');
+const { pathToFileURL } = require('url');
+
+// Register custom local-media scheme as privileged (must be before app is ready)
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'local-media',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true
+    }
+  }
+]);
 
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 let mainWindow;
+let pendingGenieRestore = null;
 
 // Data persistence
 const dataPath = path.join(app.getPath('userData'), 'shortcuts.json');
@@ -29,6 +44,66 @@ function saveShortcuts(shortcuts) {
   }
 }
 
+function restoreWindowAfterGenie() {
+  if (!mainWindow || mainWindow.isDestroyed() || !pendingGenieRestore) return;
+
+  const { bounds, minimumSize, wasMaximized } = pendingGenieRestore;
+  pendingGenieRestore = null;
+  mainWindow.setMinimumSize(minimumSize[0], minimumSize[1]);
+  mainWindow.setOpacity(1);
+  mainWindow.setBounds(bounds, false);
+  if (wasMaximized) mainWindow.maximize();
+}
+
+function animateWindowToTaskbar() {
+  if (!mainWindow || mainWindow.isMinimized()) return;
+
+  const wasMaximized = mainWindow.isMaximized();
+  if (wasMaximized) mainWindow.unmaximize();
+
+  const startBounds = mainWindow.getBounds();
+  const minimumSize = mainWindow.getMinimumSize();
+  mainWindow.setMinimumSize(1, 1);
+
+  const display = screen.getDisplayMatching(startBounds);
+  const workArea = display.workArea;
+  const endBounds = {
+    x: Math.round(workArea.x + workArea.width / 2 - 30),
+    y: Math.round(workArea.y + workArea.height - 18),
+    width: 60,
+    height: 18,
+  };
+
+  const duration = 520;
+  const start = Date.now();
+
+  const easeInCubic = (t) => t * t * t;
+  const timer = setInterval(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      clearInterval(timer);
+      return;
+    }
+
+    const progress = Math.min((Date.now() - start) / duration, 1);
+    const eased = easeInCubic(progress);
+    const nextBounds = {
+      x: Math.round(startBounds.x + (endBounds.x - startBounds.x) * eased),
+      y: Math.round(startBounds.y + (endBounds.y - startBounds.y) * eased),
+      width: Math.max(1, Math.round(startBounds.width + (endBounds.width - startBounds.width) * eased)),
+      height: Math.max(1, Math.round(startBounds.height + (endBounds.height - startBounds.height) * eased)),
+    };
+
+    mainWindow.setBounds(nextBounds, false);
+    mainWindow.setOpacity(Math.max(0.15, 1 - eased * 0.85));
+
+    if (progress >= 1) {
+      clearInterval(timer);
+      pendingGenieRestore = { bounds: startBounds, minimumSize, wasMaximized };
+      mainWindow.minimize();
+    }
+  }, 16);
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -48,6 +123,8 @@ function createWindow() {
     titleBarOverlay: false,
   });
 
+  mainWindow.on('restore', restoreWindowAfterGenie);
+
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools({ mode: 'detach' });
@@ -57,6 +134,21 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  // Register local-media protocol handler to serve local images
+  protocol.handle('local-media', (request) => {
+    let filePath = request.url.slice('local-media://'.length);
+    filePath = decodeURIComponent(filePath);
+    // On Windows, strip leading slash if URL normalized to "local-media:///C:/..."
+    if (process.platform === 'win32' && filePath.startsWith('/')) {
+      filePath = filePath.slice(1);
+    }
+    try {
+      return net.fetch(pathToFileURL(filePath).toString());
+    } catch (err) {
+      console.error('local-media protocol error:', err);
+    }
+  });
+
   createWindow();
 
   app.on('activate', () => {
@@ -111,7 +203,7 @@ ipcMain.handle('launch-shortcut', (_, shortcut) => {
 
 // Window controls
 ipcMain.handle('window-minimize', () => {
-  mainWindow?.minimize();
+  animateWindowToTaskbar();
 });
 
 ipcMain.handle('window-maximize', () => {

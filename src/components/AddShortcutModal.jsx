@@ -212,7 +212,7 @@ function AddShortcutModal({ onSave, onClose, editData }) {
                 >
                   {customImage ? (
                     <img
-                      src={`file://${customImage.replace(/\\/g, '/')}`}
+                      src={`local-media://${customImage.replace(/\\/g, '/')}`}
                       alt="Custom"
                       className="custom-image-preview"
                     />
