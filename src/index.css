@@ -88,11 +88,12 @@
 html, body, #root {
   height: 100%;
   overflow: hidden;
+  background-color: transparent;
 }
 
 body {
   font-family: var(--font-family);
-  background-color: var(--bg-primary);
+  background-color: transparent;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -224,7 +225,12 @@ body {
 }
 
 .app-container.window-genie-out {
-  animation: window-genie-to-dock 520ms cubic-bezier(0.45, 0, 0.85, 0.35) forwards;
+  animation: window-genie-to-dock 500ms cubic-bezier(0.3, 0, 0.25, 1) forwards;
+  pointer-events: none;
+}
+
+.app-container.window-genie-in {
+  animation: window-genie-from-dock 600ms cubic-bezier(0.25, 1, 0.25, 1) forwards;
   pointer-events: none;
 }
 
@@ -956,30 +962,61 @@ body {
 @keyframes window-genie-to-dock {
   0% {
     opacity: 1;
-    transform: translateY(0) scaleX(1) scaleY(1) skewX(0deg);
-    border-radius: 0;
+    transform: translateY(0) scale(1) perspective(800px) rotateX(0deg);
     filter: blur(0);
-    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    border-radius: var(--radius-lg);
   }
-  28% {
+  30% {
+    transform: translateY(12px) scaleX(1.02) scaleY(0.96) perspective(800px) rotateX(4deg);
     opacity: 1;
-    transform: translateY(10px) scaleX(1.02) scaleY(0.94) skewX(-2deg);
-    filter: blur(0);
-    clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%);
+    clip-path: polygon(0% 0%, 100% 0%, 96% 100%, 4% 100%);
   }
-  62% {
-    opacity: 0.85;
-    transform: translateY(130px) scaleX(0.55) scaleY(0.38) skewX(8deg);
-    border-radius: 28px;
+  65% {
+    transform: translateY(140px) scaleX(0.45) scaleY(0.3) perspective(800px) rotateX(15deg);
+    opacity: 0.8;
     filter: blur(1px);
-    clip-path: polygon(18% 0, 82% 0, 58% 100%, 42% 100%);
+    clip-path: polygon(10% 0%, 90% 0%, 65% 100%, 35% 100%);
   }
   100% {
+    transform: translateY(450px) scaleX(0.04) scaleY(0.06) perspective(800px) rotateX(30deg);
     opacity: 0;
-    transform: translateY(420px) scaleX(0.08) scaleY(0.04) skewX(18deg);
+    filter: blur(6px);
+    clip-path: polygon(45% 0%, 55% 0%, 51% 100%, 49% 100%);
     border-radius: 999px;
-    filter: blur(5px);
-    clip-path: polygon(48% 0, 52% 0, 51% 100%, 49% 100%);
+  }
+}
+
+@keyframes window-genie-from-dock {
+  0% {
+    transform: translateY(450px) scaleX(0.04) scaleY(0.06) perspective(800px) rotateX(30deg);
+    opacity: 0;
+    filter: blur(6px);
+    clip-path: polygon(45% 0%, 55% 0%, 51% 100%, 49% 100%);
+    border-radius: 999px;
+  }
+  45% {
+    transform: translateY(140px) scaleX(0.45) scaleY(0.3) perspective(800px) rotateX(15deg);
+    opacity: 0.75;
+    filter: blur(1px);
+    clip-path: polygon(10% 0%, 90% 0%, 65% 100%, 35% 100%);
+  }
+  75% {
+    transform: translateY(-8px) scale(1.025);
+    opacity: 1;
+    filter: blur(0);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    border-radius: var(--radius-lg);
+  }
+  90% {
+    transform: translateY(1.5px) scale(0.99);
+  }
+  100% {
+    transform: translateY(0) scale(1) perspective(800px) rotateX(0deg);
+    opacity: 1;
+    filter: blur(0);
+    clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    border-radius: var(--radius-lg);
   }
 }
 

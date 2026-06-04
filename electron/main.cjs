@@ -20,7 +20,6 @@ protocol.registerSchemesAsPrivileged([
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
 let mainWindow;
-let pendingGenieRestore = null;
 
 // Data persistence
 const dataPath = path.join(app.getPath('userData'), 'shortcuts.json');
@@ -44,66 +43,6 @@ function saveShortcuts(shortcuts) {
   }
 }
 
-function restoreWindowAfterGenie() {
-  if (!mainWindow || mainWindow.isDestroyed() || !pendingGenieRestore) return;
-
-  const { bounds, minimumSize, wasMaximized } = pendingGenieRestore;
-  pendingGenieRestore = null;
-  mainWindow.setMinimumSize(minimumSize[0], minimumSize[1]);
-  mainWindow.setOpacity(1);
-  mainWindow.setBounds(bounds, false);
-  if (wasMaximized) mainWindow.maximize();
-}
-
-function animateWindowToTaskbar() {
-  if (!mainWindow || mainWindow.isMinimized()) return;
-
-  const wasMaximized = mainWindow.isMaximized();
-  if (wasMaximized) mainWindow.unmaximize();
-
-  const startBounds = mainWindow.getBounds();
-  const minimumSize = mainWindow.getMinimumSize();
-  mainWindow.setMinimumSize(1, 1);
-
-  const display = screen.getDisplayMatching(startBounds);
-  const workArea = display.workArea;
-  const endBounds = {
-    x: Math.round(workArea.x + workArea.width / 2 - 30),
-    y: Math.round(workArea.y + workArea.height - 18),
-    width: 60,
-    height: 18,
-  };
-
-  const duration = 520;
-  const start = Date.now();
-
-  const easeInCubic = (t) => t * t * t;
-  const timer = setInterval(() => {
-    if (!mainWindow || mainWindow.isDestroyed()) {
-      clearInterval(timer);
-      return;
-    }
-
-    const progress = Math.min((Date.now() - start) / duration, 1);
-    const eased = easeInCubic(progress);
-    const nextBounds = {
-      x: Math.round(startBounds.x + (endBounds.x - startBounds.x) * eased),
-      y: Math.round(startBounds.y + (endBounds.y - startBounds.y) * eased),
-      width: Math.max(1, Math.round(startBounds.width + (endBounds.width - startBounds.width) * eased)),
-      height: Math.max(1, Math.round(startBounds.height + (endBounds.height - startBounds.height) * eased)),
-    };
-
-    mainWindow.setBounds(nextBounds, false);
-    mainWindow.setOpacity(Math.max(0.15, 1 - eased * 0.85));
-
-    if (progress >= 1) {
-      clearInterval(timer);
-      pendingGenieRestore = { bounds: startBounds, minimumSize, wasMaximized };
-      mainWindow.minimize();
-    }
-  }, 16);
-}
-
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 900,
@@ -111,8 +50,7 @@ function createWindow() {
     minWidth: 600,
     minHeight: 500,
     frame: false,
-    transparent: false,
-    backgroundColor: '#0a0a0f',
+    transparent: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -123,7 +61,9 @@ function createWindow() {
     titleBarOverlay: false,
   });
 
-  mainWindow.on('restore', restoreWindowAfterGenie);
+  mainWindow.on('restore', () => {
+    mainWindow.webContents.send('window-restored');
+  });
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
@@ -203,7 +143,7 @@ ipcMain.handle('launch-shortcut', (_, shortcut) => {
 
 // Window controls
 ipcMain.handle('window-minimize', () => {
-  animateWindowToTaskbar();
+  mainWindow?.minimize();
 });
 
 ipcMain.handle('window-maximize', () => {

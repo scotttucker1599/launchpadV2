@@ -10,4 +10,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   selectFile: () => ipcRenderer.invoke('select-file'),
   selectFolder: () => ipcRenderer.invoke('select-folder'),
   selectImage: () => ipcRenderer.invoke('select-image'),
+  onWindowRestored: (callback) => ipcRenderer.on('window-restored', (_, ...args) => callback(...args)),
 });

@@ -31,10 +31,20 @@ function App() {
   const [editingShortcut, setEditingShortcut] = useState(null);
   const [toast, setToast] = useState(null);
   const [isWindowGenieMinimizing, setIsWindowGenieMinimizing] = useState(false);
+  const [isWindowGenieRestoring, setIsWindowGenieRestoring] = useState(false);
 
   // Load shortcuts on mount
   useEffect(() => {
     api.getShortcuts().then(setShortcuts);
+
+    if (isElectron && window.electronAPI.onWindowRestored) {
+      window.electronAPI.onWindowRestored(() => {
+        setIsWindowGenieRestoring(true);
+        setTimeout(() => {
+          setIsWindowGenieRestoring(false);
+        }, 600);
+      });
+    }
   }, []);
 
   // Save shortcuts whenever they change
@@ -78,15 +88,23 @@ function App() {
     showToast(`Launching "${shortcut.name}"`, '🚀');
   };
 
-  const handleMinimizeWindow = async () => {
+  const handleMinimizeWindow = () => {
     if (isWindowGenieMinimizing) return;
     setIsWindowGenieMinimizing(true);
-    await api.minimizeWindow();
-    setIsWindowGenieMinimizing(false);
+    setTimeout(async () => {
+      await api.minimizeWindow();
+      setIsWindowGenieMinimizing(false);
+    }, 500);
   };
 
+  const windowGenieClass = isWindowGenieMinimizing
+    ? 'window-genie-out'
+    : isWindowGenieRestoring
+    ? 'window-genie-in'
+    : '';
+
   return (
-    <div className={`app-container ${isWindowGenieMinimizing ? 'window-genie-out' : ''}`}>
+    <div className={`app-container ${windowGenieClass}`}>
       <div className="bg-glow" />
       <TitleBar api={{ ...api, minimizeWindow: handleMinimizeWindow }} />
 
